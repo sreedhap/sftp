@@ -2,7 +2,7 @@ FROM debian:jessie
 MAINTAINER Adrian Dvergsdal [atmoz.net]
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y install openssh-server && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y install python2.7 openssh-server && \
     rm -rf /var/lib/apt/lists/*
 
 # sshd needs this directory to run

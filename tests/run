@@ -32,15 +32,16 @@ function beforeTest() {
     rm -rf "$tmpDir" # clean state
     mkdir "$tmpDir"
 
-    echo "test::$(id -u):$(id -g)" >> "$tmpDir/users"
+    echo "test::$(id -u):$(id -g)" > "$tmpDir/users"
     docker run \
-        -v "$tmpDir/users:/etc/sftp-users.conf:ro" \
+        -v "$tmpDir/users":/etc/sftp-users.conf:ro \
         -v "$scriptDir/id_rsa.pub":/home/test/.ssh/keys/id_rsa.pub:ro \
         -v "$tmpDir":/home/test/share \
         --name "$sftpContainerName" \
         --expose 22 \
         -d "$sftpImageName" \
         > "$redirect"
+
     sleep 1 # wait for sftp server to get ready
 }
 
@@ -92,6 +93,36 @@ function testMinimalContainerStart() {
 
     ps="$(docker ps -q -f name="$tmpContainerName")"
     assertNotEqual "$ps" ""
+
+    if [ -z "$ps" ]; then
+        skipAllTests=true
+    fi
+
+    if [ "$output" != "quiet" ]; then
+        docker logs "$tmpContainerName"
+    fi
+
+    if [ "$cleanup" == "cleanup" ]; then
+        docker rm -fv "$tmpContainerName" > "$redirect"
+    fi
+}
+
+function testPythonIsInstalled() {
+    $skipAllTests && skip && return 0
+
+    #Starting a temporary container because beforetest doesn't mount usersconf and start container properly.
+    tmpContainerName="$sftpContainerName""_python"
+
+    docker run \
+        --name "$tmpContainerName" \
+        -d "$sftpImageName" \
+        minimal::1111 \
+        > "$redirect"
+    sleep 1
+
+	pythonVersion="$(docker exec -it $tmpContainerName /usr/bin/python2.7 --version)"
+	assertReturn $? 0
+	assertStartsWith "$pythonVersion" "Python 2.7"
 
     if [ -z "$ps" ]; then
         skipAllTests=true

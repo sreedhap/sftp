@@ -1,3 +1,8 @@
+sreedhap/sftp
+=============
+Addition: Python 2.7 is installed to help file processing in sftp servers.
+
+ReadMe section of Atmoz/sftp
 atmoz/sftp
 ==========
 
